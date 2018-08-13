@@ -7,6 +7,7 @@ public class Main {
 	public static void main(String[] args) {
 		WindowsPrincipale win = new WindowsPrincipale();
 		Game game = new Game(2, 4, win);
+		win.setGame(game);
 		game.Play();
 		Player.scan.close();
 		}

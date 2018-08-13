@@ -1,6 +1,5 @@
 package fr.PyJaC.uno;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -23,6 +22,7 @@ public class Player {
 	private String messageAction;
 	private Random random = new Random();
 	private WindowsPrincipale windowsPrincipale;
+	private boolean wait = true;
 
 	Player(PlayerType playerType, String name, Game game, WindowsPrincipale windowPrincipale) {
 		this.playerType = playerType;
@@ -31,125 +31,33 @@ public class Player {
 		this.windowsPrincipale = windowPrincipale;
 	}
 	
-	public void runTurn() throws IOException {
+	public void runTurn(){
 		if  (playerType == PlayerType.HUMAN) {
 			
-			windowsPrincipale.setPlayer(this);
+			windowsPrincipale.waitVerif();
 			
-			ArrayList<String> stringListCard = getCardsStringList();
-			System.out.println(getName() + " appuyer sur entrée pour continuer");
-			scan.nextLine();
-			windowsPrincipale.chargeCard();
+			wait = true;
 			
-			// boucle input	
-			boolean saisieIncorecte = true;
-			boolean cardFind;
-			do {
-				cardFind = false;
-				System.out.println("\nVos cartes :");
-				System.out.println(String.join(", ", stringListCard));
-				System.out.println("La carte de milieu est :");
-				System.out.println(game.getCenterCard());
-				System.out.println("\nSaisissez une carte ou piochez (p)");
-				String reponse = scan.nextLine();
-				reponse = reponse.toUpperCase();
-				// test Human reponse
-				if (reponse.equals("P")) {
-					piocheCard();
-					saisieIncorecte = false;
-				} else if (stringListCard.contains(reponse)){
-					// input in in list
-					try {
-						for (int x = 0; x < stringListCard.size(); x++) {
-							if (reponse.equalsIgnoreCase(stringListCard.get(x))) {
-								cardFind = true;
-								Card cardChoose = listCard.get(x);
-								if (game.testCard(cardChoose)) {
-									boolean breakBool = false;
-									if (cardChoose.getValeur() == ValeurCard.addFour) {
-										for (Card card : listCard) {
-											if (card.getValeur() != ValeurCard.addFour && game.testCard(card)) {
-												System.out.println("Vous pouvez jouer donc vous ne pouvez pas poser de +4");
-												breakBool = true;
-												break;
-											}
-										}
-									}
-									
-									if (breakBool) {
-										break;
-									}
-									
-									// choose color jocker
-									if (cardChoose.getValeur() == ValeurCard.addFour || cardChoose.getValeur() == ValeurCard.multiColor) {
-										while (true) {
-											breakBool = false;
-											System.out.println("\nVous avez choisis un jocker merci de saisir la couleur a selectionner (r, b, v, j)");
-											String reponseColor = scan.nextLine();
-											reponseColor = reponseColor.toUpperCase();
-											switch (reponseColor) {
-											case "R":
-												cardChoose.setColor(ColorCard.Red);
-												breakBool = true;
-												break;
-												
-											case "V":
-												cardChoose.setColor(ColorCard.Green);
-												breakBool = true;
-												break;
-												
-											case "B":
-												cardChoose.setColor(ColorCard.Blue);
-												breakBool = true;
-												break;
-												
-											case "J":
-												cardChoose.setColor(ColorCard.Yellow);
-												breakBool = true;
-												break;
-
-											default:
-												System.out.println("Erreur de saisie");
-												break;
-											}
-											if (breakBool) {
-												poseCard(cardChoose);
-												break;
-											}
-										}
-									} else
-										poseCard(cardChoose);
-									saisieIncorecte = false;
-									break;
-								} else {
-									System.out.println("La carte " + cardChoose.toString() + " ne peut pas etre possé");
-								}
-							}
-						}
-					} catch (IndexOutOfBoundsException e) {
-						cardFind = false;
-						System.out.println("Erreur veuillez ressaisir");
-					}
-				}
-				if (saisieIncorecte && !cardFind) {
-					System.out.println("Je n'ai pas compris pouvez vous répétez ?");
-				}
-			} while (saisieIncorecte);
-			
-			if (game.getNumberHumanPlayer() >= 2) {
-				for (int x = 0; x < 100; x++) {
-					System.out.print("\n");
+			while (wait) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 			
-			System.out.println(getName() + " " + messageAction + "\n");
+			windowsPrincipale.addLog(getName() + " " + messageAction + "\n");
 			
 			if (listCard.size() == 1) {
 				int chance = random.nextInt(51);
-				if (chance != 50)
-						System.out.println(getName() + " a dit UNO !\n");
+				if (chance != 50) {
+					windowsPrincipale.addLog(" ");
+					windowsPrincipale.addLog(getName() + " a dit UNO !");
+					windowsPrincipale.addLog(" ");
+				}
 				else {
-					System.out.println(getName() + " a oublier de dire UNO, il pioche 2 cartes !\n");
+					windowsPrincipale.addLog(getName() + " a oublier de dire UNO, il pioche 2 cartes !\n");
 					listCard.add(game.takeCard());
 					listCard.add(game.takeCard());
 				}
@@ -334,14 +242,17 @@ public class Player {
 				piocheCard();
 			}
 			
-			System.out.println(getName() + " " + messageAction + "\n");
+			windowsPrincipale.addLog(getName() + " " + messageAction + "\n");
 			
 			if (listCard.size() == 1) {
-				int chance = random.nextInt(51);
-				if (chance != 50)
-						System.out.println(getName() + " a dit UNO !\n");
+				int chance = random.nextInt(22);
+				if (chance != 20) {
+					windowsPrincipale.addLog(" ");
+					windowsPrincipale.addLog("" + getName() + " a dit UNO !");
+					windowsPrincipale.addLog(" ");
+				}
 				else {
-					System.out.println(getName() + " a oublier de dire UNO, il pioche 2 cartes !\n");
+					windowsPrincipale.addLog(getName() + " a oublier de dire UNO, il pioche 2 cartes !\n");
 					listCard.add(game.takeCard());
 					listCard.add(game.takeCard());
 				}
@@ -356,21 +267,23 @@ public class Player {
 		}
 	}
 	
-	private void poseCard(Card card) {
-		listCard.remove(card);
-		game.changeCenterCard(card);
-		messageAction = "a posé la carte " + card.toString();
-		game.lastCard = card;
-		windowsPrincipale.dechargeCard();
+	public void poseCard(Card card) {
+		if (game.testCard(card)) {
+			listCard.remove(card);
+			game.changeCenterCard(card);
+			messageAction = "a posé la carte " + card.toString();
+			game.lastCard = card;
+			windowsPrincipale.dechargeCard();
+			wait = false;
+		}
 	}
 
-	private void piocheCard() {
+	public void piocheCard() {
 		Card newCard = game.takeCard();
 		addCard(newCard);
-		if (playerType == PlayerType.HUMAN)
-			System.out.println("Vous avez piochez la carte " + newCard.toString());
 		messageAction = "a pioché une carte";
 		windowsPrincipale.dechargeCard();
+		wait = false;
 
 	}
 
@@ -401,5 +314,17 @@ public class Player {
 	
 	public ArrayList<Card> getCard() {
 		return this.listCard;
+	}
+	
+	public boolean testAddFour() {
+		for (Card card : listCard) {
+			if (card.getValeur() != ValeurCard.addFour && game.testCard(card))
+				return false;
+		}
+		return true;
+	}
+	
+	public boolean testCard(Card card) {
+		return game.testCard(card);
 	}
 }

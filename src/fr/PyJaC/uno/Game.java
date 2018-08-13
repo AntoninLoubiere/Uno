@@ -1,6 +1,5 @@
 package fr.PyJaC.uno;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -55,19 +54,8 @@ public class Game {
 		listPseudoOrdi = createListOrdiPseudo();
 		
 		centerCard = takeCard();
-		String reponse;
 		for (int x = 0; x < numberPlayerHuman; x++) {
-			while (true) {
-				System.out.println("Choisissez un pseudo");
-				reponse  = Player.scan.nextLine();
-				if (!listPseudo.contains(reponse)) {
-					listPseudo.add(reponse);
-					break;
-				}
-				
-				System.out.println("Saisie incorecte");
-			}
-			listPlayer.add(new Player(PlayerType.HUMAN, reponse, this, windowPrincipale));
+			listPlayer.add(new Player(PlayerType.HUMAN, "Joueur" + String.valueOf(x + 1), this, windowPrincipale));
 		}
 		
 		for (int x = 0; x < numberPlayerCPU; x++) {
@@ -94,16 +82,16 @@ public class Game {
 			}
 			
 			if (lastCard != null && lastCard.getValeur() == ValeurCard.pass) {
-				System.out.println("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " passe son tour\n");
+				windowPrincipale.addLog("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " passe son tour\n");
 				if (listPlayer.get(playerIdinProgress).getPlayerType() == PlayerType.HUMAN) {
-					System.out.println("Appuyer sur entrer pour valider");
-					Player.scan.nextLine();
+					windowPrincipale.showDialogBonusInfo("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " passe son tour\n");
+	
 				}
 				playerIdinProgress++;
 			}
 			
 			if (lastCard != null && lastCard.getValeur() == ValeurCard.reverse && playerBefore != null) {
-				System.out.println("Le joueur " + playerBefore.getName() + " a inversée le sens de jeu");
+				windowPrincipale.addLog("Le joueur " + playerBefore.getName() + " a inversée le sens de jeu");
 				Collections.reverse(listPlayer);
 				for (playerIdinProgress = 0 ;playerIdinProgress < listPlayer.size(); playerIdinProgress++) {
 					if (listPlayer.get(playerIdinProgress) == playerBefore)
@@ -113,12 +101,11 @@ public class Game {
 			}
 			
 			if (lastCard != null && lastCard.getValeur() == ValeurCard.addTwo && playerBefore != null) {
-				System.out.println("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 2 cartes et passe son tour\n");
+				windowPrincipale.addLog("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 2 cartes et passe son tour\n");
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				if (listPlayer.get(playerIdinProgress).getPlayerType() == PlayerType.HUMAN) {
-					System.out.println("Appuyer sur entrer pour valider");
-					Player.scan.nextLine();
+					windowPrincipale.showDialogBonusInfo("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 2 cartes et passe son tour\n");
 				}
 				playerIdinProgress++;
 			}
@@ -130,8 +117,7 @@ public class Game {
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				if (listPlayer.get(playerIdinProgress).getPlayerType() == PlayerType.HUMAN) {
-					System.out.println("Appuyer sur entrer pour valider");
-					Player.scan.nextLine();
+					windowPrincipale.showDialogBonusInfo("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 4 cartes et passe son tour\n");
 				}
 				playerIdinProgress++;
 			}
@@ -141,13 +127,10 @@ public class Game {
 			}
 			lastCard = null;
 			Player playerCourant = listPlayer.get(playerIdinProgress);
+			windowPrincipale.setPlayer(playerCourant);
 			System.out.println("C'est au tour de: " + playerCourant.getName());
 			
-			try {
-				playerCourant.runTurn();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			playerCourant.runTurn();
 			
 			if (listPlayer.size() == 1) {
 				partyInProgress  = false;
@@ -160,12 +143,13 @@ public class Game {
 		
 		listWinner.add(listPlayer.get(0));
 		
-		System.out.println("\nFin de la partie, classement: ");
+		windowPrincipale.addLog(" ");
+		windowPrincipale.addLog("\nFin de la partie, classement: ");
 		for (int x = 0; x < listWinner.size(); x++) {
 			if (listWinner.get(x).getPlayerType() == PlayerType.HUMAN)
-				System.out.println(String.valueOf(x + 1) + ". " + listWinner.get(x).getName() + " (Player)");
+				windowPrincipale.addLog(String.valueOf(x + 1) + ". " + listWinner.get(x).getName() + " (Humain)");
 			else
-				System.out.println(String.valueOf(x + 1) + ". " + listWinner.get(x).getName() + " (IA)");
+				windowPrincipale.addLog(String.valueOf(x + 1) + ". " + listWinner.get(x).getName() + " (IA)");
 
 		}
 		
@@ -202,7 +186,9 @@ public class Game {
 
 
 	public void win(String name, Player player) {
-		System.out.println("\n\n" + name + " a terminé !\n");
+		windowPrincipale.addLog(" ");
+		windowPrincipale.addLog("\n\n" + name + " a terminé !\n");
+		windowPrincipale.addLog(" ");
 		listWinner.add(player);
 		listPlayer.remove(player);
 		playerIdinProgress--;
