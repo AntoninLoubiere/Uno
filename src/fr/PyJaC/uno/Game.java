@@ -210,6 +210,7 @@ public class Game {
 	public Card takeCard() {
 		Card card = listCard.get(0);
 		listCard.remove(card);
+		Collections.shuffle(listCard);
 		return card;
 	}
 	

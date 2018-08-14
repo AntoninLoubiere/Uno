@@ -7,7 +7,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
@@ -116,7 +115,7 @@ public class ButtonCardGraph extends JButton{
 			g2d.setPaint(gp);
 			try {
 				g2d.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), 10, 10);
-				g2d.drawImage(ImageIO.read(new File(card.getValeur().getPathString())), 0, 0, getWidth(),
+				g2d.drawImage(ImageIO.read(getClass().getResource(card.getValeur().getPathString())), 0, 0, getWidth(),
 						getHeight(), this);
 			} catch (IOException e) {
 				System.out.println("Impossible de lire l'image: " + card.getValeur().getPathString());
