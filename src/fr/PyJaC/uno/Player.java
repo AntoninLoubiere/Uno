@@ -49,21 +49,6 @@ public class Player {
 			
 			windowsPrincipale.addLog(getName() + " " + messageAction + "\n");
 			
-			if (listCard.size() == 1) {
-				int chance = random.nextInt(51);
-				if (chance != 50) {
-					windowsPrincipale.addLog(" ");
-					windowsPrincipale.addLog(getName() + " a dit UNO !");
-					windowsPrincipale.addLog(" ");
-				}
-				else {
-					windowsPrincipale.addLog(getName() + " a oublier de dire UNO, il pioche 2 cartes !\n");
-					listCard.add(game.takeCard());
-					listCard.add(game.takeCard());
-				}
-				
-			}
-			
 			if (listCard.size() == 0) {
 				game.win(getName(), this);
 			}

@@ -10,7 +10,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -19,6 +18,7 @@ import javax.swing.JSplitPane;
 import fr.PyJaC.uno.Card;
 import fr.PyJaC.uno.Game;
 import fr.PyJaC.uno.Player;
+import fr.PyJaC.uno.UnoVerif;
 import fr.PyJaC.uno.enumeration.ValeurCard;
 
 
@@ -36,6 +36,7 @@ public class WindowsPrincipale extends JFrame {
 	private JPanel cardPanel = new JPanel();
 	private JPanel verifPanel = new JPanel();
 	private JPanel cardCenterPanel = new JPanel();
+	private JPanel bonusValidatePanel = new JPanel();
 	
 	private JScrollPane scrollPaneEast = new JScrollPane(textLogPanel);
 	private JScrollPane south = new JScrollPane(cardPanel);
@@ -43,14 +44,18 @@ public class WindowsPrincipale extends JFrame {
 	private JButton pioche = new JButton("Piocher");
 	private JButton unoButton = new JButton("UNO !");
 	private JButton verifButton = new JButton("Valider");
+	private JButton bonusValidateButton = new JButton("Ok");
 	
 	private JLabel verifLabel = new JLabel("C'est au tour de: ");
+	private JLabel bonusValidateLabel = new JLabel("joueur 1 passe son tour");
 	
 	private Player playerCourant;
 	
 	private JSplitPane JSP = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, center, scrollPaneEast);
 	
 	private ButtonCardGraph centerCard = new ButtonCardGraph();
+	
+	private UnoVerif unoVerif = null;
 
 	private Game game;
 	
@@ -74,8 +79,25 @@ public class WindowsPrincipale extends JFrame {
 	
 	private void creatWidget() {
 		addLog("Bienvenue dans l'application \"UNO\"");
-		
+				
+		centerCard.setEnabled(false);
+		centerCard.setJockerColorVisibility(true);
+
 		pioche.setEnabled(false);
+		
+		// action Listener
+		
+		bonusValidateButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				center.removeAll();
+				center.add(cardCenterPanel, BorderLayout.CENTER);
+				updateFrame();
+				game.setWaitBonus(false);
+			}
+		});
+		
 		pioche.addActionListener(new ActionListener() {
 			
 			@Override
@@ -84,21 +106,36 @@ public class WindowsPrincipale extends JFrame {
 			}
 		});
 		
-		verifLabel.setPreferredSize(new Dimension(50, 5));
-		
+		unoButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (unoVerif != null) {
+					unoVerif.sayUno();
+					unoVerif = null;
+				}
+			}
+		});
 		verifButton.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				center.removeAll();
-				center.add(cardCenterPanel);
+				center.add(cardCenterPanel, BorderLayout.CENTER);
 				updateFrame();
-				center.setSize(verifPanel.getSize());
+				
+				// verif Uno 
+				
+				if (unoVerif != null) {
+					unoVerif.cancel();
+					unoVerif.run();
+				}
+				
 				chargeCard();
+				
 			}
 		});
 		
-		centerCard.setEnabled(false);
 	}
 
 	private void createJPanel() {
@@ -107,12 +144,15 @@ public class WindowsPrincipale extends JFrame {
 		// layout
 		
 		verifPanel.setLayout(new BorderLayout());
+		bonusValidatePanel.setLayout(new BorderLayout());
 		contentPane.setLayout(new BorderLayout());
 		textLogPanel.setLayout(new BoxLayout(textLogPanel, BoxLayout.Y_AXIS));
+		center.setLayout(new BorderLayout());
 		
 		south.setPreferredSize(new Dimension(10, 130));
 		center.setPreferredSize(new Dimension(500, 300));
-		verifPanel.setPreferredSize(new Dimension(500, 300));
+		
+		JSP.resetToPreferredSizes();
 		
 		// add
 		contentPane.add(JSP, BorderLayout.CENTER);
@@ -122,10 +162,13 @@ public class WindowsPrincipale extends JFrame {
 		verifPanel.add(verifLabel, BorderLayout.CENTER);
 		verifPanel.add(verifButton, BorderLayout.SOUTH);
 		
+		bonusValidatePanel.add(bonusValidateLabel, BorderLayout.CENTER);
+		bonusValidatePanel.add(bonusValidateButton, BorderLayout.SOUTH);
+		
 		north.add(pioche);
 		north.add(unoButton);
 		
-		center.add(cardCenterPanel);
+		center.add(cardCenterPanel, BorderLayout.CENTER);
 		
 		cardCenterPanel.add(centerCard);
 		}
@@ -150,7 +193,7 @@ public class WindowsPrincipale extends JFrame {
 		boolean canPlaceAddFour = playerCourant.testAddFour();
 		ArrayList<Card> listCard = playerCourant.getCard();
 		for (Card card : listCard) {
-			ButtonCardGraph button = new ButtonCardGraph(card, playerCourant);
+			ButtonCardGraph button = new ButtonCardGraph(card, playerCourant, this);
 			cardPanel.add(button);
 			if (card.getValeur() == ValeurCard.addFour && !canPlaceAddFour) {
 				button.setEnabled(false);
@@ -178,7 +221,7 @@ public class WindowsPrincipale extends JFrame {
 	}
 	public void waitVerif() {
 		center.removeAll();
-		center.add(verifPanel);
+		center.add(verifPanel, BorderLayout.CENTER);
 		verifLabel.setText("C'est au tour de: " + playerCourant.getName());
 		updateFrame();
 	}
@@ -190,10 +233,19 @@ public class WindowsPrincipale extends JFrame {
 	}
 	
 	public void showDialogBonusInfo(String message) {
-		JOptionPane.showMessageDialog(this,
-				message,
-				"Information - Bonus utilisée",
-				JOptionPane.INFORMATION_MESSAGE);
+		game.setWaitBonus(true);
+		center.removeAll();
+		center.add(bonusValidatePanel, BorderLayout.CENTER);
+		bonusValidateLabel.setText(message);
+		updateFrame();
+	}
+	
+	public void removeUnoVerif() {
+		unoVerif = null;
+	}
+
+	public void addUnoVerif(Player playerCourant2) {
+		unoVerif = new UnoVerif(playerCourant2, game, this);
 	}
 
 }

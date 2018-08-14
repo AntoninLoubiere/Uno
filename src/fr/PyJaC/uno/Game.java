@@ -1,7 +1,13 @@
 package fr.PyJaC.uno;
 
+import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.Collections;
+
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import fr.PyJaC.uno.enumeration.ColorCard;
 import fr.PyJaC.uno.enumeration.PlayerType;
@@ -23,11 +29,16 @@ public class Game {
 	private ArrayList<Player> listWinner = new ArrayList<>();
 	private int playerIdinProgress = 0;
 	private WindowsPrincipale windowPrincipale;
+	private boolean waitBonus = false;
 			
 	public Game(int numberPlayerHuman, int numberPlayerCPU, WindowsPrincipale windowsPrincipale) {
 		this.windowPrincipale = windowsPrincipale;
 		// init listCard
-		for (int x = 0; x < (numberPlayerHuman + numberPlayerCPU) / 6 + 1; x++) {
+		
+		int numberPackageCard = (numberPlayerHuman + numberPlayerCPU) / 6 + 1;
+		if ((numberPlayerHuman + numberPlayerCPU) % 6 == 0)
+			numberPackageCard--;
+		for (int x = 0; x < numberPackageCard; x++) {
 			for (ColorCard color : ColorCard.values()) {
 				for (ValeurCard valeur : ValeurCard.values()) {
 					if (valeur != valeurJocker[0] && valeur != valeurJocker[1]) {
@@ -54,8 +65,40 @@ public class Game {
 		listPseudoOrdi = createListOrdiPseudo();
 		
 		centerCard = takeCard();
+		
+		// add Player
 		for (int x = 0; x < numberPlayerHuman; x++) {
-			listPlayer.add(new Player(PlayerType.HUMAN, "Joueur" + String.valueOf(x + 1), this, windowPrincipale));
+			String[] options = {"OK"};
+			JPanel panel = new JPanel();
+			panel.setLayout(new GridLayout(2, 2));
+			JLabel lblError = new JLabel("");
+			JLabel lbl = new JLabel("Entrez votre pseudo: ");
+			panel.add(lbl);
+			JTextField txt = new JTextField(10);
+			panel.add(txt);
+			
+			panel.add(lblError);
+			while (true) {
+				int selectedOption = JOptionPane.showOptionDialog(windowPrincipale, panel, "Choix Pseudo", JOptionPane.NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options , options[0]);
+	
+				if(selectedOption == 0)
+				{
+					String text = txt.getText();
+					if (text.length() > 3) {
+						if (listPseudo.contains(text))
+							lblError.setText("Le nom existe déja");
+						else {
+							listPlayer.add(new Player(PlayerType.HUMAN, text, this, windowPrincipale));
+							listPseudo.add(text);
+							break;
+						}
+					}
+					else {
+						lblError.setText("Le nom est trop petit");
+					}
+				}
+				
+			}
 		}
 		
 		for (int x = 0; x < numberPlayerCPU; x++) {
@@ -66,6 +109,7 @@ public class Game {
 				listPseudoOrdi.remove(0);
 			}
 		}
+		
 		// distribuer les cartes
 		for (Player player : listPlayer) {
 			for(int x = 0; x < 7; x++)
@@ -111,7 +155,7 @@ public class Game {
 			}
 			
 			if (lastCard != null && lastCard.getValeur() == ValeurCard.addFour && playerBefore != null) {
-				System.out.println("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 4 cartes et passe son tour\n");
+				windowPrincipale.addLog("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 4 cartes et passe son tour\n");
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
@@ -120,6 +164,14 @@ public class Game {
 					windowPrincipale.showDialogBonusInfo("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 4 cartes et passe son tour\n");
 				}
 				playerIdinProgress++;
+			}
+			
+			while (waitBonus) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 			
 			if (playerIdinProgress >= listPlayer.size()) {
@@ -213,6 +265,10 @@ public class Game {
 		Collections.shuffle(array);
 		
 		return array;
+	}
+	
+	public void setWaitBonus(boolean bool) {
+		waitBonus = bool;
 	}
 
 }
