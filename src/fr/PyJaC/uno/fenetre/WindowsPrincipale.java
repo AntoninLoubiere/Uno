@@ -174,7 +174,7 @@ public class WindowsPrincipale extends JPanel {
 		listPseudoPanel.setLayout(new GridLayout(game.getNumberPlayer(), 2));
 		
 		scrollCard.setPreferredSize(new Dimension(10, 130));
-		center.setPreferredSize(new Dimension(300, 300));
+		center.setPreferredSize(new Dimension(500, 300));
 		scrollPseudo.setPreferredSize(new Dimension(300, 300));
 
 		splitRight.resetToPreferredSizes();
