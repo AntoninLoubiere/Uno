@@ -12,6 +12,7 @@ import javax.swing.JTextField;
 import fr.PyJaC.uno.enumeration.ColorCard;
 import fr.PyJaC.uno.enumeration.PlayerType;
 import fr.PyJaC.uno.enumeration.ValeurCard;
+import fr.PyJaC.uno.fenetre.UnoFrame;
 import fr.PyJaC.uno.fenetre.WindowsPrincipale;
 
 public class Game {
@@ -30,9 +31,13 @@ public class Game {
 	private int playerIdinProgress = 0;
 	private WindowsPrincipale windowPrincipale;
 	private boolean waitBonus = false;
+	private UnoFrame frame;
 			
-	public Game(int numberPlayerHuman, int numberPlayerCPU, WindowsPrincipale windowsPrincipale) {
-		this.windowPrincipale = windowsPrincipale;
+	public Game(int numberPlayerHuman, int numberPlayerCPU, UnoFrame frame) {
+		this.frame = frame;
+		
+		this.numberPlayerHuman = numberPlayerHuman;
+		this.numberPlayerCPU = numberPlayerCPU;
 		// init listCard
 		
 		int numberPackageCard = (numberPlayerHuman + numberPlayerCPU) / 6 + 1;
@@ -47,27 +52,13 @@ public class Game {
 					} else {
 						listCard.add(new Card(color, valeur));
 					}
-					
 				}
 			}
 		}
 		Collections.shuffle(listCard);
 		
-		this.numberPlayerHuman = numberPlayerHuman;
-		this.numberPlayerCPU = numberPlayerCPU;
-		
-	
-	}
-	
-	
-	public void Play() {
-
-		listPseudoOrdi = createListOrdiPseudo();
-		
-		centerCard = takeCard();
-		
-		// add Player
-		for (int x = 0; x < numberPlayerHuman; x++) {
+		// add player
+		for (int x1 = 0; x1 < numberPlayerHuman; x1++) {
 			String[] options = {"OK"};
 			JPanel panel = new JPanel();
 			panel.setLayout(new GridLayout(2, 2));
@@ -88,7 +79,7 @@ public class Game {
 						if (listPseudo.contains(text))
 							lblError.setText("Le nom existe déja");
 						else {
-							listPlayer.add(new Player(PlayerType.HUMAN, text, this, windowPrincipale));
+							listPlayer.add(new Player(PlayerType.HUMAN, text, this));
 							listPseudo.add(text);
 							break;
 						}
@@ -100,15 +91,29 @@ public class Game {
 				
 			}
 		}
+		// add cpu player
+		listPseudoOrdi = createListOrdiPseudo();
 		
-		for (int x = 0; x < numberPlayerCPU; x++) {
+		for (int x1 = 0; x1 < numberPlayerCPU; x1++) {
 			if (listPseudoOrdi.size() == 0 || listPseudo.contains(listPseudoOrdi.get(0)))
-				listPlayer.add(new Player(PlayerType.CPU, "Ordinateur" + String.valueOf(x+ 1), this, windowPrincipale));
+				listPlayer.add(new Player(PlayerType.CPU, "Ordinateur" + String.valueOf(x1+ 1), this));
 			else {
-				listPlayer.add(new Player(PlayerType.CPU, listPseudoOrdi.get(0), this, windowPrincipale));
+				listPlayer.add(new Player(PlayerType.CPU, listPseudoOrdi.get(0), this));
 				listPseudoOrdi.remove(0);
 			}
 		}
+		
+		Collections.shuffle(listPlayer);
+		
+		windowPrincipale = new WindowsPrincipale(this, frame);
+		this.frame.setContentPane(windowPrincipale);
+		
+	
+	}
+	
+	
+	public void Play() {		
+		centerCard = takeCard();
 		
 		// distribuer les cartes
 		for (Player player : listPlayer) {
@@ -116,7 +121,6 @@ public class Game {
 				player.addCard(takeCard());
 		}
 		
-		Collections.shuffle(listPlayer);
 		
 		Player playerBefore = null;
 		while (partyInProgress) {
@@ -148,6 +152,7 @@ public class Game {
 				windowPrincipale.addLog("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 2 cartes et passe son tour\n");
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
+				winChangeListPlayer(listPlayer.get(playerIdinProgress), "");
 				if (listPlayer.get(playerIdinProgress).getPlayerType() == PlayerType.HUMAN) {
 					windowPrincipale.showDialogBonusInfo("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 2 cartes et passe son tour\n");
 				}
@@ -160,6 +165,7 @@ public class Game {
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
+				winChangeListPlayer(listPlayer.get(playerIdinProgress), "");
 				if (listPlayer.get(playerIdinProgress).getPlayerType() == PlayerType.HUMAN) {
 					windowPrincipale.showDialogBonusInfo("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 4 cartes et passe son tour\n");
 				}
@@ -194,6 +200,7 @@ public class Game {
 		}
 		
 		listWinner.add(listPlayer.get(0));
+		winChangeListPlayer(listPlayer.get(0), "(Terminé - "+ String.valueOf(getNumberPlayer() - listPlayer.size() + 1) +")");
 		
 		windowPrincipale.addLog(" ");
 		windowPrincipale.addLog("\nFin de la partie, classement: ");
@@ -232,12 +239,6 @@ public class Game {
 		return centerCard.testWithOther(card);
 	}
 
-
-	public int getNumberHumanPlayer() {
-		return numberPlayerHuman;
-	}
-
-
 	public void win(String name, Player player) {
 		windowPrincipale.addLog(" ");
 		windowPrincipale.addLog("\n\n" + name + " a terminé !\n");
@@ -245,6 +246,8 @@ public class Game {
 		listWinner.add(player);
 		listPlayer.remove(player);
 		playerIdinProgress--;
+		windowPrincipale.updateProgressBar();
+		winChangeListPlayer(player, "(Terminé - " + String.valueOf(getNumberPlayer() - listPlayer.size()) +")");
 	}
 	
 	private ArrayList<String> createListOrdiPseudo() {
@@ -270,6 +273,36 @@ public class Game {
 	
 	public void setWaitBonus(boolean bool) {
 		waitBonus = bool;
+	}
+
+	public int getNumberHumanPlayer() {
+		return numberPlayerHuman;
+	}
+	
+	public int getNumberPlayer() {
+		return numberPlayerHuman + numberPlayerCPU;
+	}
+	
+	public ArrayList<Player> getPlayerList() {
+		return listPlayer;
+	}
+	
+	public void addLog(String log) {
+		windowPrincipale.addLog(log);
+	}
+
+
+	public void winWaitVerif() {
+		windowPrincipale.waitVerif();
+	}
+
+
+	public void winDechargeCard() {
+		windowPrincipale.dechargeCard();
+	}
+	
+	public void winChangeListPlayer(Player player, String message) {
+		windowPrincipale.listPseudoInfoChange(player, message);
 	}
 
 }

@@ -2,15 +2,17 @@ package fr.PyJaC.uno.fenetre;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -22,14 +24,13 @@ import fr.PyJaC.uno.UnoVerif;
 import fr.PyJaC.uno.enumeration.ValeurCard;
 
 
-public class WindowsPrincipale extends JFrame {
+public class WindowsPrincipale extends JPanel {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private JPanel contentPane = new JPanel();
 	private JPanel center = new JPanel();
 	private JPanel textLogPanel = new JPanel();
 	private JPanel north = new JPanel();
@@ -37,9 +38,13 @@ public class WindowsPrincipale extends JFrame {
 	private JPanel verifPanel = new JPanel();
 	private JPanel cardCenterPanel = new JPanel();
 	private JPanel bonusValidatePanel = new JPanel();
+	private JPanel south = new JPanel();
+	private JPanel southButtonPanel = new JPanel();
+	private JPanel listPseudoPanel = new JPanel();
 	
 	private JScrollPane scrollPaneEast = new JScrollPane(textLogPanel);
-	private JScrollPane south = new JScrollPane(cardPanel);
+	private JScrollPane scrollCard = new JScrollPane(cardPanel);
+	private JScrollPane scrollPseudo = new JScrollPane(listPseudoPanel);
 	
 	private JButton pioche = new JButton("Piocher");
 	private JButton unoButton = new JButton("UNO !");
@@ -48,10 +53,14 @@ public class WindowsPrincipale extends JFrame {
 	
 	private JLabel verifLabel = new JLabel("C'est au tour de: ");
 	private JLabel bonusValidateLabel = new JLabel("joueur 1 passe son tour");
+	private JLabel labelProgressBar = new JLabel("Avancement de la partie: ");
+	
+	private JProgressBar progressBar = new JProgressBar();
 	
 	private Player playerCourant;
 	
-	private JSplitPane JSP = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, center, scrollPaneEast);
+	private JSplitPane splitRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, center, scrollPaneEast);
+	private JSplitPane splitLeft = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, scrollPseudo, splitRight);
 	
 	private ButtonCardGraph centerCard = new ButtonCardGraph();
 	
@@ -59,31 +68,46 @@ public class WindowsPrincipale extends JFrame {
 
 	private Game game;
 	
-	
-	
-	public WindowsPrincipale() {
-		this.setTitle("UNO");
-		this.setSize(800, 500);
-		this.setLocationRelativeTo(null);
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		creatWidget();
-		createJPanel();
-		this.setVisible(true);
+	private UnoFrame frame;
 
-	}
+	private int progressBarInt = 0;
 	
-	public void setGame(Game game) {
+	private HashMap<Player, JLabel> listPseudoInfo = new HashMap<>();
+	
+	
+	
+	public WindowsPrincipale(Game game, UnoFrame frame) {
 		this.game = game;
+		this.frame = frame;
+		
+		createJPanel();
+		creatWidget();
+
+		
+		progressBar.setMaximum(game.getNumberPlayer() - 1);
+		progressBar.setValue(0);
+		
+		updateFrame();
+		
+		frame.showFrame();
 	}
 	
 	private void creatWidget() {
 		addLog("Bienvenue dans l'application \"UNO\"");
+		addLog("");
 				
 		centerCard.setEnabled(false);
 		centerCard.setJockerColorVisibility(true);
 
 		pioche.setEnabled(false);
+		
+		progressBar.setStringPainted(true);
+		
+		for (Player player : game.getPlayerList()) {
+			listPseudoPanel.add(new JLabel("  " + player.getName()));
+			listPseudoInfo.put(player, new JLabel("  7c  "));
+			listPseudoPanel.add(listPseudoInfo.get(player));
+		}
 		
 		// action Listener
 		
@@ -139,25 +163,27 @@ public class WindowsPrincipale extends JFrame {
 	}
 
 	private void createJPanel() {
-		this.setContentPane(contentPane);
-		
 		// layout
 		
-		verifPanel.setLayout(new BorderLayout());
-		bonusValidatePanel.setLayout(new BorderLayout());
-		contentPane.setLayout(new BorderLayout());
+		this.setLayout(new BorderLayout());
 		textLogPanel.setLayout(new BoxLayout(textLogPanel, BoxLayout.Y_AXIS));
 		center.setLayout(new BorderLayout());
+		verifPanel.setLayout(new BorderLayout());
+		bonusValidatePanel.setLayout(new BorderLayout());
+		south.setLayout(new BorderLayout());
+		listPseudoPanel.setLayout(new GridLayout(game.getNumberPlayer(), 2));
 		
-		south.setPreferredSize(new Dimension(10, 130));
-		center.setPreferredSize(new Dimension(500, 300));
-		
-		JSP.resetToPreferredSizes();
+		scrollCard.setPreferredSize(new Dimension(10, 130));
+		center.setPreferredSize(new Dimension(300, 300));
+		scrollPseudo.setPreferredSize(new Dimension(300, 300));
+
+		splitRight.resetToPreferredSizes();
+		splitLeft.resetToPreferredSizes();
 		
 		// add
-		contentPane.add(JSP, BorderLayout.CENTER);
-		contentPane.add(south, BorderLayout.SOUTH);
-		contentPane.add(north, BorderLayout.NORTH);
+		this.add(splitLeft, BorderLayout.CENTER); // splitRight is in the left
+		this.add(south, BorderLayout.SOUTH);
+		this.add(north, BorderLayout.NORTH);
 		
 		verifPanel.add(verifLabel, BorderLayout.CENTER);
 		verifPanel.add(verifButton, BorderLayout.SOUTH);
@@ -165,12 +191,20 @@ public class WindowsPrincipale extends JFrame {
 		bonusValidatePanel.add(bonusValidateLabel, BorderLayout.CENTER);
 		bonusValidatePanel.add(bonusValidateButton, BorderLayout.SOUTH);
 		
-		north.add(pioche);
-		north.add(unoButton);
+		//north.add(pioche);
+		//north.add(unoButton);
+		north.add(labelProgressBar);
+		north.add(progressBar);
 		
 		center.add(cardCenterPanel, BorderLayout.CENTER);
 		
 		cardCenterPanel.add(centerCard);
+		
+		south.add(southButtonPanel);
+		south.add(scrollCard, BorderLayout.SOUTH);
+		
+		southButtonPanel.add(pioche);
+		southButtonPanel.add(unoButton);
 		}
 	
 	public void addLog(String log) {
@@ -218,6 +252,7 @@ public class WindowsPrincipale extends JFrame {
 		invalidate();
 		validate();
 		repaint();
+		frame.updateFrame();
 	}
 	public void waitVerif() {
 		center.removeAll();
@@ -246,6 +281,21 @@ public class WindowsPrincipale extends JFrame {
 
 	public void addUnoVerif(Player playerCourant2) {
 		unoVerif = new UnoVerif(playerCourant2, game, this);
+	}
+	
+	public void updateProgressBar() {
+		progressBarInt++;
+		progressBar.setValue(progressBarInt );
+	}
+	
+	public void listPseudoInfoChange(Player player, String message) {
+		JLabel infoLabel = listPseudoInfo.get(player);
+		if (!message.contains("Terminé"))
+			infoLabel.setText("  " + player.getCard().size() +"c " + message + "  ");
+		else
+			infoLabel.setText("  " + message + "  ");
+
+		updateFrame();
 	}
 
 }

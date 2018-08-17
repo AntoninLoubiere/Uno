@@ -3,16 +3,12 @@ package fr.PyJaC.uno;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
-import java.util.Scanner;
 
 import fr.PyJaC.uno.enumeration.ColorCard;
 import fr.PyJaC.uno.enumeration.PlayerType;
 import fr.PyJaC.uno.enumeration.ValeurCard;
-import fr.PyJaC.uno.fenetre.WindowsPrincipale;
 
 public class Player {
-
-	public static Scanner scan = new Scanner(System.in);
 
 	
 	private ArrayList<Card> listCard = new ArrayList<>();
@@ -21,20 +17,24 @@ public class Player {
 	private Game game;
 	private String messageAction;
 	private Random random = new Random();
-	private WindowsPrincipale windowsPrincipale;
 	private boolean wait = true;
 
-	Player(PlayerType playerType, String name, Game game, WindowsPrincipale windowPrincipale) {
+	Player(PlayerType playerType, String name, Game game) {
 		this.playerType = playerType;
 		this.name = name;
 		this.game = game;
-		this.windowsPrincipale = windowPrincipale;
 	}
 	
 	public void runTurn(){
 		if  (playerType == PlayerType.HUMAN) {
 			
-			windowsPrincipale.waitVerif();
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+			
+			game.winWaitVerif();
 			
 			wait = true;
 			
@@ -42,12 +42,11 @@ public class Player {
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
 			
-			windowsPrincipale.addLog(getName() + " " + messageAction + "\n");
+			game.addLog(getName() + " " + messageAction + "\n");
 			
 			if (listCard.size() == 0) {
 				game.win(getName(), this);
@@ -227,17 +226,17 @@ public class Player {
 				piocheCard();
 			}
 			
-			windowsPrincipale.addLog(getName() + " " + messageAction + "\n");
+			game.addLog(getName() + " " + messageAction + "\n");
 			
 			if (listCard.size() == 1) {
 				int chance = random.nextInt(22);
 				if (chance != 20) {
-					windowsPrincipale.addLog(" ");
-					windowsPrincipale.addLog("" + getName() + " a dit UNO !");
-					windowsPrincipale.addLog(" ");
+					game.addLog(" ");
+					game.addLog("" + getName() + " a dit UNO !");
+					game.addLog(" ");
+					game.winChangeListPlayer(this, "(UNO)");
 				}
 				else {
-					windowsPrincipale.addLog(getName() + " a oublier de dire UNO, il pioche 2 cartes !\n");
 					listCard.add(game.takeCard());
 					listCard.add(game.takeCard());
 				}
@@ -258,8 +257,9 @@ public class Player {
 			game.changeCenterCard(card);
 			messageAction = "a posé la carte " + card.toString();
 			game.lastCard = card;
-			windowsPrincipale.dechargeCard();
+			game.winDechargeCard();
 			wait = false;
+			testChangeListPseudo();
 		}
 	}
 
@@ -267,9 +267,9 @@ public class Player {
 		Card newCard = game.takeCard();
 		addCard(newCard);
 		messageAction = "a pioché une carte";
-		windowsPrincipale.dechargeCard();
+		game.winDechargeCard();
 		wait = false;
-
+		testChangeListPseudo();
 	}
 
 	public void addCard(Card card) {
@@ -311,5 +311,11 @@ public class Player {
 	
 	public boolean testCard(Card card) {
 		return game.testCard(card);
+	}
+	
+	public void testChangeListPseudo() {
+		if (listCard.size() > 1) {
+			game.winChangeListPlayer(this, " ");
+		}
 	}
 }
