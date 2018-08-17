@@ -13,7 +13,7 @@ public class UnoFrame extends JFrame{
 	
 	public UnoFrame() {
 		setTitle("Uno");
-		setSize(new Dimension(900, 500));
+		setSize(new Dimension(1200, 500));
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
