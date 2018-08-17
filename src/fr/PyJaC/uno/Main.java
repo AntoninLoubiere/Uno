@@ -3,6 +3,7 @@ package fr.PyJaC.uno;
 import java.awt.Component;
 import java.awt.GridLayout;
 
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -10,25 +11,29 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 
-import fr.PyJaC.uno.fenetre.WindowsPrincipale;
+import fr.PyJaC.uno.fenetre.UnoFrame;
 
 public class Main {
 	
 	private static int numberPlayer;
 	private static int numberCPU;
+	
 
 	public static void main(String[] args) {
-		WindowsPrincipale win = new WindowsPrincipale();
+		
+		// Create windows
+		UnoFrame frame = new UnoFrame();
+		
+		
 		// DIALOG NUMBER PLAYER
-		showNumberPlayerDialog(win);
+		showNumberPlayerDialog(frame);
 				
-		Game game = new Game(numberPlayer, numberCPU, win);
-		win.setGame(game);
+		Game game = new Game(numberPlayer, numberCPU, frame);
 		game.Play();
-		Player.scan.close();
 		}
 	
-	private static void showNumberPlayerDialog(WindowsPrincipale win) {
+
+	private static void showNumberPlayerDialog(JFrame frame) {
 		// def panel
 		JPanel contentPane = new JPanel();
 		contentPane.setLayout(new GridLayout(5, 2));
@@ -44,7 +49,7 @@ public class Main {
 		SpinnerModel spinerModelCPU =
 				new SpinnerNumberModel(1, //initial value
 						0, //min
-						10000, //max
+						5000, //max
 						1);
 		
 		JSpinner spinerPlayer = new JSpinner(spinerModelPlayer);
@@ -60,15 +65,16 @@ public class Main {
 		contentPane.add((Component) spinerPlayer);
 		contentPane.add(labelCPU);
 		contentPane.add((Component) spinerCPU);
+		contentPane.add(labelError);
 		
 		// show dialog
 		String[] options = {"OK"};
 		while (true) {
-			int i = JOptionPane.showOptionDialog(win, contentPane, "Nombre de Joueur", JOptionPane.NO_OPTION, 
+			int i = JOptionPane.showOptionDialog(frame, contentPane, "Nombre de Joueur", JOptionPane.NO_OPTION, 
 					JOptionPane.QUESTION_MESSAGE, null, options , options[0]);
 			
 			if (i == 0) {
-				if ((int) spinerPlayer.getValue() + (int) spinerCPU.getValue() <= 2) {
+				if ((int) spinerPlayer.getValue() + (int) spinerCPU.getValue() < 2) {
 					labelError.setText("Le nombre de joueur est trop peu important");
 				}
 				else

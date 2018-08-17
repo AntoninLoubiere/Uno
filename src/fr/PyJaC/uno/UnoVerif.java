@@ -26,6 +26,7 @@ public class UnoVerif extends TimerTask{
 		windowsPrincipale.addLog(" ");
 		windowsPrincipale.addLog(playerToVerif.getName() + " a dit UNO !");
 		windowsPrincipale.addLog(" ");
+		windowsPrincipale.listPseudoInfoChange(playerToVerif, "(UNO)");
 	}
 
 	@Override
@@ -37,6 +38,8 @@ public class UnoVerif extends TimerTask{
 			playerToVerif.addCard(game.takeCard());
 			playerToVerif.addCard(game.takeCard());
 			windowsPrincipale.removeUnoVerif();
+			windowsPrincipale.listPseudoInfoChange(playerToVerif, "");
+
 
 		}
 	}

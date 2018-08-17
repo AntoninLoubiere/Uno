@@ -80,6 +80,7 @@ public class ButtonCardGraph extends JButton{
 				playerCourant.poseCard(card);
 				if (playerCourant.getCard().size() == 1) {
 					windowsPrincipale.addUnoVerif(playerCourant);
+					windowsPrincipale.listPseudoInfoChange(playerCourant, "");
 				}
 			}
 		});
