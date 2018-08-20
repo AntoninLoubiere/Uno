@@ -24,6 +24,9 @@ public class Main {
 		// Create windows
 		UnoFrame frame = new UnoFrame();
 		
+		//frame.setContentPane(new PanelMenuPrincipale());
+		//frame.showFrame();
+		
 		
 		// DIALOG NUMBER PLAYER
 		showNumberPlayerDialog(frame);
