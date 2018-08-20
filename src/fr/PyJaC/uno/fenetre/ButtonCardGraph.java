@@ -1,8 +1,6 @@
 package fr.PyJaC.uno.fenetre;
 
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -39,7 +37,9 @@ public class ButtonCardGraph extends JButton{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				windowsPrincipale.testUno();
 				if (card.getValeur() == Game.valeurJocker[0] || card.getValeur() == Game.valeurJocker[1]) {
+					// dialog choose color
 					Object[] possibilities = {"Rouge", "Vert", "Bleu", "Jaune"};
 					String s = (String)JOptionPane.showInputDialog(
 							windowsPrincipale,
@@ -77,6 +77,7 @@ public class ButtonCardGraph extends JButton{
 					}
 
 				}
+				windowsPrincipale.testUno(true);
 				playerCourant.poseCard(card);
 				if (playerCourant.getCard().size() == 1) {
 					windowsPrincipale.addUnoVerif(playerCourant);
@@ -104,27 +105,27 @@ public class ButtonCardGraph extends JButton{
 	public void paintComponent (Graphics g) {
 		Graphics2D g2d = (Graphics2D)g;
 		if (card != null) {
-			GradientPaint gp;
-			if ((card.getValeur() == Game.valeurJocker[0] || card.getValeur() == Game.valeurJocker[1]) && !showColorJocker) {
-				gp = new GradientPaint(0, 0, Color.orange, this.getWidth(), 
-						this.getHeight(), Color.black, true);
-			}
-			else {
-				gp = new GradientPaint(0, 0, card.getColor().getColor(), this.getWidth() * 2, 
-						this.getHeight() * 2, Color.white, true);
-			}
-			g2d.setPaint(gp);
 			try {
-				g2d.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), 10, 10);
-				g2d.drawImage(ImageIO.read(getClass().getResource(card.getValeur().getPathString())), 0, 0, getWidth(),
-						getHeight(), this);
+				System.out.println("path: " + card.getColor().getPathColor() + card.getValeur().getPathString());
+				if ((card.getValeur() == Game.valeurJocker[0] || card.getValeur() == Game.valeurJocker[1]) && !showColorJocker) {
+					g2d.drawImage(ImageIO.read(getClass().getResource("res/card/" + card.getValeur().getPathString())), 0, 0, getWidth(),
+							getHeight(), this);
+				} else {
+					g2d.drawImage(ImageIO.read(getClass().getResource("res/card/" + card.getColor().getPathColor() + card.getValeur().getPathString())), 0, 0, getWidth(),
+							getHeight(), this);
+				}
 			} catch (IOException e) {
 				System.out.println("Impossible de lire l'image: " + card.getValeur().getPathString());
 			}
 
 		} else {
-			g2d.setPaint(Color.lightGray);
-			g2d.fillRoundRect(0, 0, this.getWidth(), this.getHeight(), 10, 10);
+			try {
+				g2d.drawImage(ImageIO.read(getClass().getResource("res/card/card_back_alt.png")), 0, 0, getWidth(), getHeight(), this);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				System.out.println("Une erreur est survenue: \nLocalizedMessage: " + e.getLocalizedMessage() + "\n");
+			}
 		}
 	}
 

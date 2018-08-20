@@ -39,9 +39,9 @@ public class Player {
 			wait = true;
 			
 			while (wait) {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
@@ -58,7 +58,7 @@ public class Player {
 			
 			Card cardChoose = null;
 			for (Card card : listCard) {
-				if (card.getValeur() == ValeurCard.addTwo) {
+				if (card.getValeur() == ValeurCard.piçkTwo) {
 					if (game.testCard(card)) {
 						cardChoose = card;
 						break;
@@ -68,7 +68,7 @@ public class Player {
 			
 			if (cardChoose == null) {// aucune carte trouver dans la boucle precedente
 				for (Card card : listCard) {
-					if (card.getValeur() == ValeurCard.pass || card.getValeur() == ValeurCard.reverse) {
+					if (card.getValeur() == ValeurCard.skip || card.getValeur() == ValeurCard.reverse) {
 						if (game.testCard(card)) {
 							cardChoose = card;
 							break;
@@ -79,7 +79,7 @@ public class Player {
 			
 			if (cardChoose == null) {// aucune carte trouver dans la boucle precedente
 				for (Card card : listCard) {
-					if (card.getValeur() != ValeurCard.multiColor && card.getValeur() != ValeurCard.addFour) {
+					if (card.getValeur() != ValeurCard.changeColor && card.getValeur() != ValeurCard.pickFour) {
 						if (game.testCard(card)) {
 							cardChoose = card;
 							break;
@@ -90,7 +90,7 @@ public class Player {
 			
 			if (cardChoose == null) {// aucune carte trouver dans la boucle precedente
 				for (Card card : listCard) {
-					if (card.getValeur() == ValeurCard.multiColor) {
+					if (card.getValeur() == ValeurCard.changeColor) {
 						if (game.testCard(card)) {
 							cardChoose = card;
 							ArrayList<Integer> countColor = new ArrayList<>(); // Red Green Blue Yellow
@@ -156,7 +156,7 @@ public class Player {
 			
 			if (cardChoose == null) {// aucune carte trouver dans la boucle precedente
 				for (Card card : listCard) {
-					if (card.getValeur() == ValeurCard.addFour) {
+					if (card.getValeur() == ValeurCard.pickFour) {
 						if (game.testCard(card)) {
 							cardChoose = card;
 							ArrayList<Integer> countColor = new ArrayList<>(); // Red Green Blue Yellow
@@ -257,7 +257,10 @@ public class Player {
 			game.changeCenterCard(card);
 			messageAction = "a posé la carte " + card.toString();
 			game.lastCard = card;
-			game.winDechargeCard();
+			if (game.getNumberHumanPlayer() > 1 && playerType == PlayerType.HUMAN) // if there are multiple player on one pc
+				game.winDechargeCard();
+			else if (playerType == PlayerType.HUMAN)
+				game.winDisableCard();
 			wait = false;
 			testChangeListPseudo();
 		}
@@ -267,7 +270,11 @@ public class Player {
 		Card newCard = game.takeCard();
 		addCard(newCard);
 		messageAction = "a pioché une carte";
-		game.winDechargeCard();
+		if (game.getNumberHumanPlayer() > 1 && playerType == PlayerType.HUMAN) { // if there are multiple player on one pc
+			game.winDechargeCard();
+		} else if (playerType == PlayerType.HUMAN) {
+			game.winDisableCard();
+		}
 		wait = false;
 		testChangeListPseudo();
 	}
@@ -284,7 +291,7 @@ public class Player {
 		ArrayList<String> cardsString = new ArrayList<>();
 		
 		for (Card card : listCard) {
-			if (card.getValeur() == ValeurCard.multiColor || card.getValeur() == ValeurCard.addFour) {
+			if (card.getValeur() == ValeurCard.changeColor || card.getValeur() == ValeurCard.pickFour) {
 				cardsString.add(card.getValeur().getValeurString());
 			} else
 				cardsString.add(card.toString());
@@ -303,7 +310,7 @@ public class Player {
 	
 	public boolean testAddFour() {
 		for (Card card : listCard) {
-			if (card.getValeur() != ValeurCard.addFour && game.testCard(card))
+			if (card.getValeur() != ValeurCard.pickFour && game.testCard(card))
 				return false;
 		}
 		return true;

@@ -22,6 +22,9 @@ public class UnoVerif extends TimerTask{
 	}
 	
 	public void sayUno() {
+		if (playerToVerif.getCard().size() > 1) {
+			return; // verif it is in uno
+		}
 		sayUno = true;
 		windowsPrincipale.addLog(" ");
 		windowsPrincipale.addLog(playerToVerif.getName() + " a dit UNO !");
@@ -32,6 +35,9 @@ public class UnoVerif extends TimerTask{
 	@Override
 	public void run() {
 		if (!sayUno) {
+			if (playerToVerif.getCard().size() > 1) {
+				return; // verif it is in uno
+			}
 			windowsPrincipale.addLog(" ");
 			windowsPrincipale.addLog(playerToVerif.getName() + " a oublier de dire Uno, il pioche 2 cartes");
 			windowsPrincipale.addLog(" ");

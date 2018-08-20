@@ -1,9 +1,9 @@
 package fr.PyJaC.uno.enumeration;
 
 public enum ValeurCard {
-	one("1", "res/1.png"), two("2", "res/2.png"), three("3", "res/3.png"), four("4", "res/4.png"), five("5", "res/5.png"), six("6", "res/6.png"), 
-	seven("7", "res/7.png"), height("8", "res/8.png"), nine("9", "res/9.png"), addTwo("+2", "res/addtwo.png"),
-	pass("P", "res/P.png"), reverse("I", "res/I.png"), addFour("+4", "res/addfour.png"), multiColor("J", "res/J.png");
+	one("1", "1.png"), two("2", "2.png"), three("3", "3.png"), four("4", "4.png"), five("5", "5.png"), six("6", "6.png"), 
+	seven("7", "7.png"), height("8", "8.png"), nine("9", "9.png"), piçkTwo("+2", "picker.png"),
+	skip("P", "skip.png"), reverse("I", "reverse.png"), pickFour("+4", "wild_pick_four.png"), changeColor("J", "wild_color_changer.png");
 	
 	private String valeurString;
 	private String pathImage;

@@ -20,7 +20,7 @@ public class Game {
 	private ArrayList<Player> listPlayer = new ArrayList<Player>();
 	private Card centerCard;
 	private ArrayList<Card> listCard = new ArrayList<Card>();
-	public static ValeurCard[] valeurJocker = {ValeurCard.multiColor, ValeurCard.addFour};
+	public static ValeurCard[] valeurJocker = {ValeurCard.changeColor, ValeurCard.pickFour};
 	private int numberPlayerHuman;
 	private int numberPlayerCPU;
 	private boolean partyInProgress = true;
@@ -129,7 +129,9 @@ public class Game {
 				playerIdinProgress = 0;
 			}
 			
-			if (lastCard != null && lastCard.getValeur() == ValeurCard.pass) {
+			
+			// test bonus (skip)
+			if (lastCard != null && lastCard.getValeur() == ValeurCard.skip) {
 				windowPrincipale.addLog("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " passe son tour\n");
 				if (listPlayer.get(playerIdinProgress).getPlayerType() == PlayerType.HUMAN) {
 					windowPrincipale.showDialogBonusInfo("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " passe son tour\n");
@@ -137,7 +139,7 @@ public class Game {
 				}
 				playerIdinProgress++;
 			}
-			
+			// test bonus (reverse)
 			if (lastCard != null && lastCard.getValeur() == ValeurCard.reverse && playerBefore != null) {
 				windowPrincipale.addLog("Le joueur " + playerBefore.getName() + " a inversée le sens de jeu");
 				Collections.reverse(listPlayer);
@@ -147,19 +149,21 @@ public class Game {
 				}
 				playerIdinProgress++;
 			}
-			
-			if (lastCard != null && lastCard.getValeur() == ValeurCard.addTwo && playerBefore != null) {
+			//test bonus (pickTwo)
+			if (lastCard != null && lastCard.getValeur() == ValeurCard.piçkTwo && playerBefore != null) {
 				windowPrincipale.addLog("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 2 cartes et passe son tour\n");
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				winChangeListPlayer(listPlayer.get(playerIdinProgress), "");
 				if (listPlayer.get(playerIdinProgress).getPlayerType() == PlayerType.HUMAN) {
 					windowPrincipale.showDialogBonusInfo("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 2 cartes et passe son tour\n");
+					windowPrincipale.setPlayer(listPlayer.get(playerIdinProgress)); // to update card (UI)
+					winDisableCard(); //
 				}
 				playerIdinProgress++;
 			}
-			
-			if (lastCard != null && lastCard.getValeur() == ValeurCard.addFour && playerBefore != null) {
+			// test bonus (pickFour)
+			if (lastCard != null && lastCard.getValeur() == ValeurCard.pickFour && playerBefore != null) {
 				windowPrincipale.addLog("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 4 cartes et passe son tour\n");
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
 				listPlayer.get(playerIdinProgress).addCard(takeCard());
@@ -168,6 +172,8 @@ public class Game {
 				winChangeListPlayer(listPlayer.get(playerIdinProgress), "");
 				if (listPlayer.get(playerIdinProgress).getPlayerType() == PlayerType.HUMAN) {
 					windowPrincipale.showDialogBonusInfo("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 4 cartes et passe son tour\n");
+					windowPrincipale.setPlayer(listPlayer.get(playerIdinProgress)); // to update card (UI)
+					winDisableCard(); //
 				}
 				playerIdinProgress++;
 			}
@@ -185,7 +191,8 @@ public class Game {
 			}
 			lastCard = null;
 			Player playerCourant = listPlayer.get(playerIdinProgress);
-			windowPrincipale.setPlayer(playerCourant);
+			if (playerCourant.getPlayerType() == PlayerType.HUMAN) // only human can have ui
+				windowPrincipale.setPlayer(playerCourant);
 			System.out.println("C'est au tour de: " + playerCourant.getName());
 			
 			playerCourant.runTurn();
@@ -197,6 +204,12 @@ public class Game {
 			playerBefore = playerCourant;
 			
 			playerIdinProgress++;
+			
+			try {
+				Thread.sleep(10); // To don't surcharge cpu
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		listWinner.add(listPlayer.get(0));
@@ -206,7 +219,7 @@ public class Game {
 		windowPrincipale.addLog("\nFin de la partie, classement: ");
 		for (int x = 0; x < listWinner.size(); x++) {
 			if (listWinner.get(x).getPlayerType() == PlayerType.HUMAN)
-				windowPrincipale.addLog(String.valueOf(x + 1) + ". " + listWinner.get(x).getName() + " (Humain)");
+				windowPrincipale.addLog(String.valueOf(x + 1) + ". " + listWinner.get(x).getName() + " (Humain)  <======");
 			else
 				windowPrincipale.addLog(String.valueOf(x + 1) + ". " + listWinner.get(x).getName() + " (IA)");
 
@@ -252,6 +265,7 @@ public class Game {
 	
 	private ArrayList<String> createListOrdiPseudo() {
 		
+		// list of pseudo ordi
 		ArrayList<String> array = new ArrayList<>();
 		
 		array.add("Ordi-naire");
@@ -265,6 +279,8 @@ public class Game {
 		array.add("I'm programmed by Antonin");
 		array.add("I'm a program");
 		array.add("Joueur Rapide");
+		array.add("Uno !");
+		array.add("GéGé");
 		
 		Collections.shuffle(array);
 		
@@ -303,6 +319,11 @@ public class Game {
 	
 	public void winChangeListPlayer(Player player, String message) {
 		windowPrincipale.listPseudoInfoChange(player, message);
+	}
+
+
+	public void winDisableCard() {
+		windowPrincipale.disableCard();
 	}
 
 }

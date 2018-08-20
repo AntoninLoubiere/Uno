@@ -92,6 +92,8 @@ public class WindowsPrincipale extends JPanel {
 		frame.showFrame();
 	}
 	
+	// == Methode Create Widget == //
+	
 	private void creatWidget() {
 		addLog("Bienvenue dans l'application \"UNO\"");
 		addLog("");
@@ -126,6 +128,7 @@ public class WindowsPrincipale extends JPanel {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				testUno(true);
 				playerCourant.piocheCard();
 			}
 		});
@@ -144,19 +147,7 @@ public class WindowsPrincipale extends JPanel {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				center.removeAll();
-				center.add(cardCenterPanel, BorderLayout.CENTER);
-				updateFrame();
-				
-				// verif Uno 
-				
-				if (unoVerif != null) {
-					unoVerif.cancel();
-					unoVerif.run();
-				}
-				
-				chargeCard();
-				
+				validerVerif();
 			}
 		});
 		
@@ -207,21 +198,11 @@ public class WindowsPrincipale extends JPanel {
 		southButtonPanel.add(unoButton);
 		}
 	
-	public void addLog(String log) {
-		JLabel jlabel = new JLabel(log);
-		textLogPanel.add(jlabel);
-		
-		updateFrame();
-		
-		JScrollBar vertical = scrollPaneEast.getVerticalScrollBar();
-		vertical.setValue(vertical.getMaximum() + 10);
-		updateFrame();
-	}
+	// == Methode Card == //
 	
 	public void chargeCard() {
 		updateCardCenterGraph();		
-		dechargeCard();
-		
+		cardPanel.removeAll();
 		pioche.setEnabled(true);
 		
 		boolean canPlaceAddFour = playerCourant.testAddFour();
@@ -229,7 +210,7 @@ public class WindowsPrincipale extends JPanel {
 		for (Card card : listCard) {
 			ButtonCardGraph button = new ButtonCardGraph(card, playerCourant, this);
 			cardPanel.add(button);
-			if (card.getValeur() == ValeurCard.addFour && !canPlaceAddFour) {
+			if (card.getValeur() == ValeurCard.pickFour && !canPlaceAddFour) {
 				button.setEnabled(false);
 			}
 			else
@@ -242,25 +223,50 @@ public class WindowsPrincipale extends JPanel {
 		pioche.setEnabled(false);
 		cardPanel.removeAll();
 		updateFrame();
+		disableCenterCard(); // the center is not update
+	}
+	
+	// == Ui update & more == //
+	
+	public void addLog(String log) {
+		JLabel jlabel = new JLabel(log);
+		textLogPanel.add(jlabel);
+		
+		updateFrame();
+		
+		JScrollBar vertical = scrollPaneEast.getVerticalScrollBar();
+		vertical.setValue(vertical.getMaximum() + 10);
+		updateFrame();
+	}
+	
+	public void updateFrame() {
+		frame.updateFrame();
 	}
 	
 	public void setPlayer(Player player) {
 		playerCourant = player;
 	}
 	
-	public void updateFrame() {
-		invalidate();
-		validate();
-		repaint();
-		frame.updateFrame();
-	}
 	public void waitVerif() {
-		center.removeAll();
-		center.add(verifPanel, BorderLayout.CENTER);
-		verifLabel.setText("C'est au tour de: " + playerCourant.getName());
-		updateFrame();
+		if (game.getNumberHumanPlayer() > 1) {
+			center.removeAll();
+			center.add(verifPanel, BorderLayout.CENTER);
+			verifLabel.setText("C'est au tour de: " + playerCourant.getName());
+			updateFrame();
+		} else
+			validerVerif();
 	}
 	
+	private void validerVerif() {
+		center.removeAll();
+		center.add(cardCenterPanel, BorderLayout.CENTER);
+		updateFrame();
+		
+		testUno();
+		
+		chargeCard();
+		}
+
 	private void updateCardCenterGraph() {
 		updateFrame();
 		centerCard.setCard(game.getCenterCard());
@@ -296,6 +302,38 @@ public class WindowsPrincipale extends JPanel {
 			infoLabel.setText("  " + message + "  ");
 
 		updateFrame();
+	}
+
+	public void disableCard() {
+		disableCenterCard(); // the center is not update
+		pioche.setEnabled(false);
+		cardPanel.removeAll();
+		for (Card card : playerCourant.getCard()) {
+			ButtonCardGraph button = new ButtonCardGraph(card, playerCourant, this);
+			button.setEnabled(false);
+			cardPanel.add(button);
+			
+		}
+		updateFrame();
+	}
+	
+	public void disableCenterCard() {
+		centerCard.setCard(null);
+		centerCard.paintComponent(centerCard.getGraphics());
+	}
+	
+	public void testUno() {
+		if (unoVerif != null && game.getNumberHumanPlayer() > 1) { // If they are one player the program not wait
+			unoVerif.cancel();
+			unoVerif.run();
+		}
+	}
+	
+	public void testUno(boolean passTestHuman) {
+		if (unoVerif != null && passTestHuman) { // If they are one player the program wait a click (example card or pioche)
+			unoVerif.cancel();
+			unoVerif.run();
+		}
 	}
 
 }
