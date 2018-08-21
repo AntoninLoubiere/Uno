@@ -89,4 +89,41 @@ public class Main {
 		numberCPU = (int) spinerCPU.getValue();
 	}
 
+
+	public static void printExceptionNotExit(Exception e) {
+		System.out.println("\n\nUne erreur est survenue: "
+				+ "\nLocalizedMessage: " 
+				+ e.getLocalizedMessage()
+				+ "\nMessage: " 
+				+ e.getMessage()
+				+ "\nType: "
+				+ e.getClass().toString());
+		
+		for (StackTraceElement element : e.getStackTrace()) {
+			System.out.println("At " + element.toString());
+		}
+		
+		for (Throwable throwa : e.getSuppressed()) {
+			System.out.println("Suppressed: ");
+			printExceptionNotExit(throwa);
+		}
+	}
+	
+	public static void printExceptionNotExit(Throwable e) {
+		System.out.println("\n\nUne erreur est survenue: "
+				+ "\nLocalizedMessage: " 
+				+ e.getLocalizedMessage()
+				+ "\nMessage: " 
+				+ e.getMessage()
+				+ "\nType: "
+				+ e.getClass().toString()
+				+ "\n Caused message by: "
+				+ e.getCause().getMessage());
+		
+		for (StackTraceElement element : e.getStackTrace()) {
+			System.out.println("At " + element.toString());
+		}
+		
+	}
+
 }

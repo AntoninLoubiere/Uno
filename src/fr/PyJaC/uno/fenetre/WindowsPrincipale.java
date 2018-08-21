@@ -19,6 +19,7 @@ import javax.swing.JSplitPane;
 
 import fr.PyJaC.uno.Card;
 import fr.PyJaC.uno.Game;
+import fr.PyJaC.uno.Main;
 import fr.PyJaC.uno.Player;
 import fr.PyJaC.uno.UnoVerif;
 import fr.PyJaC.uno.enumeration.ValeurCard;
@@ -71,8 +72,38 @@ public class WindowsPrincipale extends JPanel {
 	private UnoFrame frame;
 
 	private int progressBarInt = 0;
+	private int numberMaxLog = 500;
+	
+	private ArrayList<JLabel> listLogLabel = new ArrayList<>();
 	
 	private HashMap<Player, JLabel> listPseudoInfo = new HashMap<>();
+
+	protected boolean stopUpdate;
+	private boolean needUpdateScrollBar = false;
+	
+	private Thread threadUpdateFrame = new Thread(new Runnable() {
+		
+		@Override
+		public void run() {
+			setName("updateThread - UNO");
+			int numberPerSeconds = 0;
+			long time1 = System.currentTimeMillis();
+			while (!stopUpdate) {
+				updateFrame();
+				numberPerSeconds++;
+				
+				if (time1 + 1000 < System.currentTimeMillis() || numberPerSeconds == 60) {
+					numberPerSeconds = 0;
+					time1 = System.currentTimeMillis();
+				}
+				try {
+					Thread.sleep(((time1 + 1000) - System.currentTimeMillis()) / (60 - numberPerSeconds));
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	});
 	
 	
 	
@@ -87,16 +118,18 @@ public class WindowsPrincipale extends JPanel {
 		progressBar.setMaximum(game.getNumberPlayer() - 1);
 		progressBar.setValue(0);
 		
-		updateFrame();
+		//updateFrame();
 		
 		frame.showFrame();
+		
+		startUpdate();
 	}
 	
 	// == Methode Create Widget == //
 	
 	private void creatWidget() {
 		addLog("Bienvenue dans l'application \"UNO\"");
-		addLog("");
+		addLog("Distribution des cartes merci de patienter...");
 				
 		centerCard.setEnabled(false);
 		centerCard.setJockerColorVisibility(true);
@@ -119,7 +152,7 @@ public class WindowsPrincipale extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				center.removeAll();
 				center.add(cardCenterPanel, BorderLayout.CENTER);
-				updateFrame();
+				//updateFrame();
 				game.setWaitBonus(false);
 			}
 		});
@@ -128,7 +161,7 @@ public class WindowsPrincipale extends JPanel {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				testUno(true);
+				testUno();
 				playerCourant.piocheCard();
 			}
 		});
@@ -216,13 +249,13 @@ public class WindowsPrincipale extends JPanel {
 			else
 				button.setEnabled(playerCourant.testCard(card));
 		}
-		updateFrame();
+		//updateFrame();
 	}
 	
 	public void dechargeCard() {
 		pioche.setEnabled(false);
 		cardPanel.removeAll();
-		updateFrame();
+		//updateFrame();
 		disableCenterCard(); // the center is not update
 	}
 	
@@ -231,16 +264,30 @@ public class WindowsPrincipale extends JPanel {
 	public void addLog(String log) {
 		JLabel jlabel = new JLabel(log);
 		textLogPanel.add(jlabel);
+		listLogLabel.add(jlabel);
+		needUpdateScrollBar = true;
+	}
+	
+	private void updateScrollBarPaneEast() {
+		try {
+			JScrollBar vertical = scrollPaneEast.getVerticalScrollBar(); // possible error
+			vertical.setValue(vertical.getMaximum()); // set the sidebar in the botom
+		} catch (NullPointerException e) {
+			Main.printExceptionNotExit(e); 
+		}
 		
-		updateFrame();
-		
-		JScrollBar vertical = scrollPaneEast.getVerticalScrollBar();
-		vertical.setValue(vertical.getMaximum() + 10);
-		updateFrame();
+		while (listLogLabel.size() > numberMaxLog) {
+			textLogPanel.remove(listLogLabel.get(0));
+			listLogLabel.remove(0);
+		}
 	}
 	
 	public void updateFrame() {
 		frame.updateFrame();
+		if (needUpdateScrollBar) {
+			needUpdateScrollBar = false; // to no repeat update scrollbar
+			updateScrollBarPaneEast();
+		}
 	}
 	
 	public void setPlayer(Player player) {
@@ -248,11 +295,11 @@ public class WindowsPrincipale extends JPanel {
 	}
 	
 	public void waitVerif() {
-		if (game.getNumberHumanPlayer() > 1) {
+		if (game.getNumberPlayerHumanNotFinish() > 1) {
 			center.removeAll();
 			center.add(verifPanel, BorderLayout.CENTER);
 			verifLabel.setText("C'est au tour de: " + playerCourant.getName());
-			updateFrame();
+			//updateFrame();
 		} else
 			validerVerif();
 	}
@@ -260,17 +307,12 @@ public class WindowsPrincipale extends JPanel {
 	private void validerVerif() {
 		center.removeAll();
 		center.add(cardCenterPanel, BorderLayout.CENTER);
-		updateFrame();
-		
-		testUno();
-		
+		//updateFrame();
 		chargeCard();
 		}
 
 	private void updateCardCenterGraph() {
-		updateFrame();
 		centerCard.setCard(game.getCenterCard());
-		updateFrame();
 	}
 	
 	public void showDialogBonusInfo(String message) {
@@ -278,7 +320,6 @@ public class WindowsPrincipale extends JPanel {
 		center.removeAll();
 		center.add(bonusValidatePanel, BorderLayout.CENTER);
 		bonusValidateLabel.setText(message);
-		updateFrame();
 	}
 	
 	public void removeUnoVerif() {
@@ -296,12 +337,12 @@ public class WindowsPrincipale extends JPanel {
 	
 	public void listPseudoInfoChange(Player player, String message) {
 		JLabel infoLabel = listPseudoInfo.get(player);
-		if (!message.contains("Terminé"))
-			infoLabel.setText("  " + player.getCard().size() +"c " + message + "  ");
-		else
-			infoLabel.setText("  " + message + "  ");
-
-		updateFrame();
+		if (infoLabel.getText() != message) { // to optimize
+			if (!message.contains("Terminé"))
+				infoLabel.setText("  " + player.getCard().size() +"c " + message + "  ");
+			else
+				infoLabel.setText("  " + message + "  ");
+		}
 	}
 
 	public void disableCard() {
@@ -314,26 +355,33 @@ public class WindowsPrincipale extends JPanel {
 			cardPanel.add(button);
 			
 		}
-		updateFrame();
+		//updateFrame();
 	}
 	
 	public void disableCenterCard() {
 		centerCard.setCard(null);
-		centerCard.paintComponent(centerCard.getGraphics());
 	}
 	
 	public void testUno() {
-		if (unoVerif != null && game.getNumberHumanPlayer() > 1) { // If they are one player the program not wait
+		if (unoVerif != null) { // If they are one player the program not wait
 			unoVerif.cancel();
 			unoVerif.run();
 		}
 	}
 	
-	public void testUno(boolean passTestHuman) {
-		if (unoVerif != null && passTestHuman) { // If they are one player the program wait a click (example card or pioche)
-			unoVerif.cancel();
-			unoVerif.run();
-		}
+	public void startUpdate() {
+		stopUpdate = false;
+		threadUpdateFrame.start();
 	}
-
+	
+	public void stopUpdate() {
+		stopUpdate = true;
+	}
+	
+	// == getter and setter == //
+	
+	public void setMaxLog(int max) {
+		numberMaxLog = max;
+	}
+	
 }
