@@ -13,6 +13,7 @@ import javax.swing.JOptionPane;
 
 import fr.PyJaC.uno.Card;
 import fr.PyJaC.uno.Game;
+import fr.PyJaC.uno.Main;
 import fr.PyJaC.uno.Player;
 import fr.PyJaC.uno.enumeration.ColorCard;
 
@@ -77,7 +78,7 @@ public class ButtonCardGraph extends JButton{
 					}
 
 				}
-				windowsPrincipale.testUno(true);
+				windowsPrincipale.testUno();
 				playerCourant.poseCard(card);
 				if (playerCourant.getCard().size() == 1) {
 					windowsPrincipale.addUnoVerif(playerCourant);
@@ -106,7 +107,6 @@ public class ButtonCardGraph extends JButton{
 		Graphics2D g2d = (Graphics2D)g;
 		if (card != null) {
 			try {
-				System.out.println("path: " + card.getColor().getPathColor() + card.getValeur().getPathString());
 				if ((card.getValeur() == Game.valeurJocker[0] || card.getValeur() == Game.valeurJocker[1]) && !showColorJocker) {
 					g2d.drawImage(ImageIO.read(getClass().getResource("res/card/" + card.getValeur().getPathString())), 0, 0, getWidth(),
 							getHeight(), this);
@@ -124,7 +124,7 @@ public class ButtonCardGraph extends JButton{
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (Exception e) {
-				System.out.println("Une erreur est survenue: \nLocalizedMessage: " + e.getLocalizedMessage() + "\n");
+				Main.printExceptionNotExit(e);
 			}
 		}
 	}

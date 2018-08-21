@@ -239,6 +239,9 @@ public class Player {
 				else {
 					listCard.add(game.takeCard());
 					listCard.add(game.takeCard());
+					game.addLog(" ");
+					game.addLog(getName() + "a oublier de dire UNO");
+					game.addLog(" ");
 				}
 				
 			}
@@ -254,10 +257,10 @@ public class Player {
 	public void poseCard(Card card) {
 		if (game.testCard(card)) {
 			listCard.remove(card);
-			game.changeCenterCard(card);
+			game.changeCenterCard(card); // to optimize
 			messageAction = "a posé la carte " + card.toString();
 			game.lastCard = card;
-			if (game.getNumberHumanPlayer() > 1 && playerType == PlayerType.HUMAN) // if there are multiple player on one pc
+			if (game.getNumberPlayerHumanNotFinish() > 1 && playerType == PlayerType.HUMAN) // if there are multiple player on one pc
 				game.winDechargeCard();
 			else if (playerType == PlayerType.HUMAN)
 				game.winDisableCard();
@@ -270,7 +273,7 @@ public class Player {
 		Card newCard = game.takeCard();
 		addCard(newCard);
 		messageAction = "a pioché une carte";
-		if (game.getNumberHumanPlayer() > 1 && playerType == PlayerType.HUMAN) { // if there are multiple player on one pc
+		if (game.getNumberPlayerHumanNotFinish() > 1 && playerType == PlayerType.HUMAN) { // if there are multiple player on one pc
 			game.winDechargeCard();
 		} else if (playerType == PlayerType.HUMAN) {
 			game.winDisableCard();

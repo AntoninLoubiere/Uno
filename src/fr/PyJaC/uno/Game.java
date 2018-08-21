@@ -32,12 +32,14 @@ public class Game {
 	private WindowsPrincipale windowPrincipale;
 	private boolean waitBonus = false;
 	private UnoFrame frame;
+	private int numberPlayerHumanNotFinish;
 			
 	public Game(int numberPlayerHuman, int numberPlayerCPU, UnoFrame frame) {
 		this.frame = frame;
 		
 		this.numberPlayerHuman = numberPlayerHuman;
 		this.numberPlayerCPU = numberPlayerCPU;
+		this.numberPlayerHumanNotFinish = numberPlayerHuman;
 		// init listCard
 		
 		int numberPackageCard = (numberPlayerHuman + numberPlayerCPU) / 6 + 1;
@@ -123,6 +125,8 @@ public class Game {
 		
 		
 		Player playerBefore = null;
+		
+		windowPrincipale.addLog("C'est parti, c'est à: " + listPlayer.get(0));
 		while (partyInProgress) {
 			
 			if (playerIdinProgress >= listPlayer.size()) {
@@ -158,7 +162,8 @@ public class Game {
 				if (listPlayer.get(playerIdinProgress).getPlayerType() == PlayerType.HUMAN) {
 					windowPrincipale.showDialogBonusInfo("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 2 cartes et passe son tour\n");
 					windowPrincipale.setPlayer(listPlayer.get(playerIdinProgress)); // to update card (UI)
-					winDisableCard(); //
+					if (numberPlayerHumanNotFinish == 1)
+						winDisableCard(); // update card only if !playerHuman > 1
 				}
 				playerIdinProgress++;
 			}
@@ -173,7 +178,8 @@ public class Game {
 				if (listPlayer.get(playerIdinProgress).getPlayerType() == PlayerType.HUMAN) {
 					windowPrincipale.showDialogBonusInfo("Le joueur " + listPlayer.get(playerIdinProgress).getName() + " pioche 4 cartes et passe son tour\n");
 					windowPrincipale.setPlayer(listPlayer.get(playerIdinProgress)); // to update card (UI)
-					winDisableCard(); //
+					if (numberPlayerHumanNotFinish == 1)
+						winDisableCard(); // update card only if !playerHuman > 1
 				}
 				playerIdinProgress++;
 			}
@@ -192,9 +198,7 @@ public class Game {
 			lastCard = null;
 			Player playerCourant = listPlayer.get(playerIdinProgress);
 			if (playerCourant.getPlayerType() == PlayerType.HUMAN) // only human can have ui
-				windowPrincipale.setPlayer(playerCourant);
-			System.out.println("C'est au tour de: " + playerCourant.getName());
-			
+				windowPrincipale.setPlayer(playerCourant);			
 			playerCourant.runTurn();
 			
 			if (listPlayer.size() == 1) {
@@ -204,17 +208,12 @@ public class Game {
 			playerBefore = playerCourant;
 			
 			playerIdinProgress++;
-			
-			try {
-				Thread.sleep(10); // To don't surcharge cpu
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 		}
 		
 		listWinner.add(listPlayer.get(0));
 		winChangeListPlayer(listPlayer.get(0), "(Terminé - "+ String.valueOf(getNumberPlayer() - listPlayer.size() + 1) +")");
 		
+		windowPrincipale.setMaxLog(getNumberPlayer()); // if the number of player > 500
 		windowPrincipale.addLog(" ");
 		windowPrincipale.addLog("\nFin de la partie, classement: ");
 		for (int x = 0; x < listWinner.size(); x++) {
@@ -222,6 +221,9 @@ public class Game {
 				windowPrincipale.addLog(String.valueOf(x + 1) + ". " + listWinner.get(x).getName() + " (Humain)  <======");
 			else
 				windowPrincipale.addLog(String.valueOf(x + 1) + ". " + listWinner.get(x).getName() + " (IA)");
+			
+			windowPrincipale.updateFrame();
+			windowPrincipale.stopUpdate();
 
 		}
 		
@@ -247,7 +249,7 @@ public class Game {
 		return centerCard;
 	}
 
-
+	
 	public boolean testCard(Card card) {
 		return centerCard.testWithOther(card);
 	}
@@ -256,9 +258,11 @@ public class Game {
 		windowPrincipale.addLog(" ");
 		windowPrincipale.addLog("\n\n" + name + " a terminé !\n");
 		windowPrincipale.addLog(" ");
-		listWinner.add(player);
-		listPlayer.remove(player);
+		listWinner.add(player); // add winerlist
+		listPlayer.remove(player); // remove listPlayer
 		playerIdinProgress--;
+		if (player.getPlayerType() == PlayerType.HUMAN)
+			numberPlayerHumanNotFinish--;
 		windowPrincipale.updateProgressBar();
 		winChangeListPlayer(player, "(Terminé - " + String.valueOf(getNumberPlayer() - listPlayer.size()) +")");
 	}
@@ -280,8 +284,7 @@ public class Game {
 		array.add("I'm a program");
 		array.add("Joueur Rapide");
 		array.add("Uno !");
-		array.add("GéGé");
-		
+
 		Collections.shuffle(array);
 		
 		return array;
@@ -297,6 +300,10 @@ public class Game {
 	
 	public int getNumberPlayer() {
 		return numberPlayerHuman + numberPlayerCPU;
+	}
+	
+	public int getNumberPlayerHumanNotFinish() {
+		return numberPlayerHumanNotFinish;
 	}
 	
 	public ArrayList<Player> getPlayerList() {
@@ -325,6 +332,7 @@ public class Game {
 	public void winDisableCard() {
 		windowPrincipale.disableCard();
 	}
+	
 
 }
 
